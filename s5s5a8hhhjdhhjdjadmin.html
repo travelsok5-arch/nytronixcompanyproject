@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Cyber Nytronix</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Admin-specific styles */
+        .card-gradient {
+            background: linear-gradient(145deg, #171717, #0a0a0a);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #262626;
+            transition: all 0.3s ease;
+        }
+        
+        .card-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.2);
+        }
+        
+        .form-input {
+            background-color: rgba(10, 10, 10, 0.7);
+            border: 1px solid #262626;
+            color: #d1d5db;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+            background-color: rgba(10, 10, 10, 0.9);
+        }
+        
+        .data-table {
+            width: 100%;
+            background: #171717;
+            border: 1px solid #262626;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .data-table th {
+            background: #0a0a0a;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: white;
+            border-bottom: 1px solid #262626;
+        }
+        
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #262626;
+        }
+        
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #dc2626;
+        }
+        
+        .profile-pic-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dc2626;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            background-color: rgba(220, 38, 38, 0.1);
+            color: white;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #dc2626;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Team Chat Styles */
+        .chat-message-left {
+            background: #374151;
+            border-radius: 1rem 1rem 1rem 0;
+            margin-right: auto;
+            max-width: 70%;
+        }
+
+        .chat-message-right {
+            background: #dc2626;
+            border-radius: 1rem 1rem 0 1rem;
+            margin-left: auto;
+            max-width: 70%;
+        }
+
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #171717;
+            border: 1px solid #262626;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Status badges */
+        .status-new { background-color: #dc2626; color: white; }
+        .status-read { background-color: #059669; color: white; }
+        .status-replied { background-color: #2563eb; color: white; }
+        
+        /* Action buttons */
+        .action-btn { 
+            padding: 0.25rem 0.5rem; 
+            border-radius: 0.375rem; 
+            font-size: 0.75rem; 
+            transition: all 0.2s; 
+        }
+        .action-btn:hover { transform: scale(1.05); }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .admin-only {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-300 min-h-screen">
+    <!-- Login Screen -->
+    <div id="login-screen" class="flex items-center justify-center min-h-screen">
+        <div class="card-gradient rounded-xl p-10 w-full max-w-md">
+            <h1 class="text-3xl font-bold text-white mb-2 text-center">Cyber Nytronix</h1>
+            <p class="text-gray-400 text-center mb-8">Admin Panel</p>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-gray-300 mb-2">Email</label>
+                    <input type="email" id="username" name="username" class="w-full form-input rounded-lg py-3 px-4" placeholder="Enter your email here" required>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-gray-300 mb-2">Password</label>
+                    <input type="password" id="password" name="password" class="w-full form-input rounded-lg py-3 px-4" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Login
+                </button>
+            </form>
+            
+            <div id="login-error" class="mt-4 text-red-500 text-center hidden">
+                Invalid credentials. Please try again.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+        <!-- Navigation -->
+        <nav class="bg-black border-b border-gray-800 py-4 sticky top-0 z-40">
+            <div class="container mx-auto px-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
+                        <span class="font-bold text-white text-sm">CN</span>
+                    </div>
+                    <span class="text-lg font-bold text-white">Admin Panel</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Pakistan Time Display -->
+                    <div class="hidden md:block">
+                        <div id="pakistan-time" class="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded"></div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <div class="profile-pic-small bg-red-600 flex items-center justify-center text-white text-sm font-bold" id="nav-profile-pic"></div>
+                        <span id="admin-username" class="text-gray-300"></span>
+                    </div>
+                    <button id="logout-btn" class="text-gray-400 hover:text-white" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container mx-auto px-4 py-8">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Sidebar -->
+                <div class="md:w-1/4">
+                    <div class="card-gradient rounded-xl p-6 sticky top-24">
+                        <h2 class="text-xl font-bold text-white mb-4">Navigation</h2>
+                        <ul class="space-y-2">
+                            <li>
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded bg-gray-800 text-white" data-tab="dashboard">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="profile">
+                                    <i class="fas fa-user mr-2"></i> My Profile
+                                </button>
+                            </li>
+                            <li class="admin-only">
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="users">
+                                    <i class="fas fa-users mr-2"></i> User Management
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="services">
+                                    <i class="fas fa-cog mr-2"></i> Services Management
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="messages">
+                                    <i class="fas fa-envelope mr-2"></i> Messages
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="team-chat">
+                                    <i class="fas fa-comments mr-2"></i> Team Chat
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="activity">
+                                    <i class="fas fa-history mr-2"></i> Activity Logs
+                                </button>
+                            </li>
+                            <li class="admin-only">
+                                <button class="tab-btn w-full text-left py-2 px-4 rounded text-gray-400 hover:text-white" data-tab="backup">
+                                    <i class="fas fa-database mr-2"></i> Backup & Restore
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="md:w-3/4">
+                    <!-- Dashboard Tab -->
+                    <div id="dashboard" class="tab-content active">
+                        <h2 class="text-2xl font-bold text-white mb-6">Dashboard Overview</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="card-gradient rounded-xl p-6">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-users text-white text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Total Users</p>
+                                        <p class="text-2xl font-bold text-white" id="total-users">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-gradient rounded-xl p-6">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-cog text-white text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Active Services</p>
+                                        <p class="text-2xl font-bold text-white" id="active-services">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-gradient rounded-xl p-6">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-envelope text-white text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">New Messages</p>
+                                        <p class="text-2xl font-bold text-white" id="new-messages">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-gradient rounded-xl p-6">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-history text-white text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Activity Logs</p>
+                                        <p class="text-2xl font-bold text-white" id="total-logs">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="card-gradient rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Recent Activity</h3>
+                                <div id="recent-activity" class="space-y-4 max-h-96 overflow-y-auto">
+                                    <div class="text-center py-8">
+                                        <div class="loading-spinner mx-auto mb-2"></div>
+                                        <p class="text-gray-400">Loading activities...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-gradient rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Quick Actions</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button class="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-left admin-only" onclick="showAddUserModal()">
+                                        <i class="fas fa-user-plus text-red-500 text-xl mb-2"></i>
+                                        <p class="font-semibold text-white">Add User</p>
+                                        <p class="text-gray-400 text-sm">Create new user account</p>
+                                    </button>
+                                    <button class="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-left" onclick="showAddServiceModal()">
+                                        <i class="fas fa-plus-circle text-red-500 text-xl mb-2"></i>
+                                        <p class="font-semibold text-white">Add Service</p>
+                                        <p class="text-gray-400 text-sm">Create new service</p>
+                                    </button>
+                                    <button class="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-left" onclick="showTab('messages')">
+                                        <i class="fas fa-inbox text-red-500 text-xl mb-2"></i>
+                                        <p class="font-semibold text-white">View Messages</p>
+                                        <p class="text-gray-400 text-sm">Check contact forms</p>
+                                    </button>
+                                    <button class="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-left" onclick="showTab('team-chat')">
+                                        <i class="fas fa-comments text-red-500 text-xl mb-2"></i>
+                                        <p class="font-semibold text-white">Team Chat</p>
+                                        <p class="text-gray-400 text-sm">Chat with team members</p>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Tab -->
+                    <div id="profile" class="tab-content">
+                        <h2 class="text-2xl font-bold text-white mb-6">My Profile</h2>
+                        
+                        <div class="card-gradient rounded-xl p-8">
+                            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
+                                <div class="text-center">
+                                    <div class="profile-pic bg-red-600 flex items-center justify-center text-white text-2xl font-bold mb-4" id="profile-picture"></div>
+                                    <input type="file" id="profile-pic-upload" class="hidden" accept="image/*">
+                                    <button id="change-profile-pic" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors">
+                                        Change Picture
+                                    </button>
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <h3 class="text-2xl font-bold text-white mb-2" id="profile-name">Admin User</h3>
+                                    <p class="text-red-500 font-medium mb-4" id="profile-role">Administrator</p>
+                                    <p class="text-gray-400 mb-4" id="profile-email">admin@cybernytronix.com</p>
+                                    <p class="text-gray-400">Last login: <span id="last-login">Just now</span></p>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-700 pt-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Edit Profile Information</h3>
+                                <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="edit-name" class="block text-gray-300 mb-2">Full Name</label>
+                                        <input type="text" id="edit-name" class="w-full form-input rounded-lg py-2 px-4" value="Admin User">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="edit-email" class="block text-gray-300 mb-2">Email</label>
+                                        <input type="email" id="edit-email" class="w-full form-input rounded-lg py-2 px-4" value="admin@cybernytronix.com" readonly>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="edit-phone" class="block text-gray-300 mb-2">Phone</label>
+                                        <input type="text" id="edit-phone" class="w-full form-input rounded-lg py-2 px-4" placeholder="+1 (555) 123-4567">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="edit-position" class="block text-gray-300 mb-2">Position</label>
+                                        <input type="text" id="edit-position" class="w-full form-input rounded-lg py-2 px-4" value="Administrator">
+                                    </div>
+                                    
+                                    <div class="md:col-span-2">
+                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                            Update Profile
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Users Management Tab -->
+                    <div id="users" class="tab-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-white">User Management</h2>
+                            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors admin-only" onclick="showAddUserModal()">
+                                <i class="fas fa-user-plus mr-2"></i> Add User
+                            </button>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4">User List</h3>
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-3">Name</th>
+                                            <th class="py-3">Email</th>
+                                            <th class="py-3">Role</th>
+                                            <th class="py-3">Status</th>
+                                            <th class="py-3">Last Login</th>
+                                            <th class="py-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table-body">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-8">
+                                                <div class="loading-spinner mx-auto mb-2"></div>
+                                                <p class="text-gray-400">Loading users...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Services Management Tab -->
+                    <div id="services" class="tab-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-white">Services Management</h2>
+                            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" onclick="showAddServiceModal()">
+                                <i class="fas fa-plus-circle mr-2"></i> Add Service
+                            </button>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Add New Service</h3>
+                            <form id="add-service-form" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="service-name" class="block text-gray-300 mb-2">Service Name</label>
+                                        <input type="text" id="service-name" class="w-full form-input rounded-lg py-2 px-4" required>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="service-category" class="block text-gray-300 mb-2">Category</label>
+                                        <select id="service-category" class="w-full form-input rounded-lg py-2 px-4">
+                                            <option value="cybersecurity">Cybersecurity</option>
+                                            <option value="development">Development</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="service-description" class="block text-gray-300 mb-2">Description</label>
+                                    <textarea id="service-description" rows="3" class="w-full form-input rounded-lg py-2 px-4" required></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label for="service-icon" class="block text-gray-300 mb-2">Icon Class (FontAwesome)</label>
+                                    <input type="text" id="service-icon" class="w-full form-input rounded-lg py-2 px-4" placeholder="fas fa-shield-alt" required>
+                                </div>
+                                
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                    Add Service
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Services List</h3>
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-3">Name</th>
+                                            <th class="py-3">Category</th>
+                                            <th class="py-3">Status</th>
+                                            <th class="py-3">Created</th>
+                                            <th class="py-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="services-table-body">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8">
+                                                <div class="loading-spinner mx-auto mb-2"></div>
+                                                <p class="text-gray-400">Loading services...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Messages Tab -->
+                    <div id="messages" class="tab-content">
+                        <h2 class="text-2xl font-bold text-white mb-6">Messages</h2>
+                        
+                        <div class="card-gradient rounded-xl p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-white">Contact Form Submissions</h3>
+                                <span class="bg-red-600 text-white text-sm px-2 py-1 rounded" id="contact-count">0 new</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-3">Name</th>
+                                            <th class="py-3">Email</th>
+                                            <th class="py-3">Service</th>
+                                            <th class="py-3">Date</th>
+                                            <th class="py-3">Status</th>
+                                            <th class="py-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contact-messages-table-body">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-8">
+                                                <div class="loading-spinner mx-auto mb-2"></div>
+                                                <p class="text-gray-400">Loading messages...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-white">Get in Touch Form Submissions</h3>
+                                <span class="bg-red-600 text-white text-sm px-2 py-1 rounded" id="get-in-touch-count">0 new</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-3">Name</th>
+                                            <th class="py-3">Email</th>
+                                            <th class="py-3">Company</th>
+                                            <th class="py-3">Date</th>
+                                            <th class="py-3">Status</th>
+                                            <th class="py-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="get-in-touch-table-body">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-8">
+                                                <div class="loading-spinner mx-auto mb-2"></div>
+                                                <p class="text-gray-400">Loading messages...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Chat Tab -->
+                    <div id="team-chat" class="tab-content">
+                        <h2 class="text-2xl font-bold text-white mb-6">Team Chat</h2>
+                        
+                        <div class="card-gradient rounded-xl p-6 mb-6">
+                            <div class="chat-container mb-4 p-4 bg-gray-900 rounded-lg" id="team-chat-messages">
+                                <div class="text-center py-8">
+                                    <div class="loading-spinner mx-auto mb-2"></div>
+                                    <p class="text-gray-400">Loading messages...</p>
+                                </div>
+                            </div>
+                            
+                            <form id="team-chat-form" class="flex gap-2">
+                                <input type="text" id="team-chat-message" placeholder="Type your message..." class="flex-1 form-input rounded-lg py-3 px-4" required>
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Logs Tab -->
+                    <div id="activity" class="tab-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-white">Activity Logs</h2>
+                            <div class="flex space-x-2">
+                                <select id="activity-limit" class="form-input rounded-lg py-2 px-4">
+                                    <option value="50">Last 50 activities</option>
+                                    <option value="100" selected>Last 100 activities</option>
+                                    <option value="200">Last 200 activities</option>
+                                    <option value="500">Last 500 activities</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6">
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-3">Date & Time</th>
+                                            <th class="py-3">User</th>
+                                            <th class="py-3">Action</th>
+                                            <th class="py-3">Details</th>
+                                            <th class="py-3">IP Address</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="activity-logs-table-body">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8">
+                                                <div class="loading-spinner mx-auto mb-2"></div>
+                                                <p class="text-gray-400">Loading activity logs...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Backup & Restore Tab -->
+                    <div id="backup" class="tab-content">
+                        <h2 class="text-2xl font-bold text-white mb-6">Backup & Restore</h2>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="card-gradient rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Database Backup</h3>
+                                <p class="text-gray-400 mb-6">
+                                    Download a complete backup of your database. This file contains all users, services, messages, and activity logs.
+                                </p>
+                                <button id="backup-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-colors admin-only">
+                                    <i class="fas fa-download mr-2"></i> Download Backup
+                                </button>
+                                <p class="text-gray-400 text-sm mt-4">
+                                    Last backup: <span id="last-backup">Never</span>
+                                </p>
+                            </div>
+                            
+                            <div class="card-gradient rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Database Restore</h3>
+                                <p class="text-gray-400 mb-6">
+                                    Restore your database from a previous backup file. This will replace all current data with the backup data.
+                                </p>
+                                <form id="restore-form" class="space-y-4">
+                                    <div>
+                                        <label for="backup-file" class="block text-gray-300 mb-2">Select Backup File</label>
+                                        <input type="file" id="backup-file" name="backup_file" class="w-full form-input rounded-lg py-2 px-4" accept=".db" required>
+                                    </div>
+                                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-colors admin-only">
+                                        <i class="fas fa-upload mr-2"></i> Restore Database
+                                    </button>
+                                </form>
+                                <p class="text-red-400 text-sm mt-4">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Warning: This will replace all current data!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="card-gradient rounded-xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold text-white mb-6">Add New User</h3>
+            <form id="add-user-form" class="space-y-4">
+                <div>
+                    <label for="new-username" class="block text-gray-300 mb-2">Full Name</label>
+                    <input type="text" id="new-username" class="w-full form-input rounded-lg py-2 px-4" required>
+                </div>
+                
+                <div>
+                    <label for="new-email" class="block text-gray-300 mb-2">Email</label>
+                    <input type="email" id="new-email" class="w-full form-input rounded-lg py-2 px-4" placeholder="user@cybernytronix.com" required>
+                </div>
+                
+                <div>
+                    <label for="new-password" class="block text-gray-300 mb-2">Password</label>
+                    <input type="password" id="new-password" class="w-full form-input rounded-lg py-2 px-4" required minlength="6">
+                </div>
+                
+                <div>
+                    <label for="new-role" class="block text-gray-300 mb-2">Role</label>
+                    <select id="new-role" class="w-full form-input rounded-lg py-2 px-4">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Add User
+                    </button>
+                    <button type="button" onclick="hideAddUserModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="card-gradient rounded-xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold text-white mb-6">Edit User</h3>
+            <form id="edit-user-form" class="space-y-4">
+                <input type="hidden" id="edit-user-id">
+                
+                <div>
+                    <label for="edit-user-name" class="block text-gray-300 mb-2">Full Name</label>
+                    <input type="text" id="edit-user-name" class="w-full form-input rounded-lg py-2 px-4" required>
+                </div>
+                
+                <div>
+                    <label for="edit-user-email" class="block text-gray-300 mb-2">Email</label>
+                    <input type="email" id="edit-user-email" class="w-full form-input rounded-lg py-2 px-4" readonly>
+                </div>
+                
+                <div>
+                    <label for="edit-user-phone" class="block text-gray-300 mb-2">Phone</label>
+                    <input type="text" id="edit-user-phone" class="w-full form-input rounded-lg py-2 px-4">
+                </div>
+                
+                <div>
+                    <label for="edit-user-position" class="block text-gray-300 mb-2">Position</label>
+                    <input type="text" id="edit-user-position" class="w-full form-input rounded-lg py-2 px-4">
+                </div>
+                
+                <div>
+                    <label for="edit-user-role" class="block text-gray-300 mb-2">Role</label>
+                    <select id="edit-user-role" class="w-full form-input rounded-lg py-2 px-4">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Update User
+                    </button>
+                    <button type="button" onclick="hideEditUserModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="card-gradient rounded-xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold text-white mb-6">Change User Password</h3>
+            <form id="change-password-form" class="space-y-4">
+                <input type="hidden" id="change-password-user-id">
+                
+                <div>
+                    <label for="change-password-new" class="block text-gray-300 mb-2">New Password</label>
+                    <input type="password" id="change-password-new" class="w-full form-input rounded-lg py-2 px-4" required minlength="6">
+                </div>
+                
+                <div>
+                    <label for="change-password-confirm" class="block text-gray-300 mb-2">Confirm Password</label>
+                    <input type="password" id="change-password-confirm" class="w-full form-input rounded-lg py-2 px-4" required minlength="6">
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Change Password
+                    </button>
+                    <button type="button" onclick="hideChangePasswordModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Service Modal -->
+    <div id="edit-service-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="card-gradient rounded-xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold text-white mb-6">Edit Service</h3>
+            <form id="edit-service-form" class="space-y-4">
+                <input type="hidden" id="edit-service-id">
+                
+                <div>
+                    <label for="edit-service-name" class="block text-gray-300 mb-2">Service Name</label>
+                    <input type="text" id="edit-service-name" class="w-full form-input rounded-lg py-2 px-4" required>
+                </div>
+                
+                <div>
+                    <label for="edit-service-category" class="block text-gray-300 mb-2">Category</label>
+                    <select id="edit-service-category" class="w-full form-input rounded-lg py-2 px-4">
+                        <option value="cybersecurity">Cybersecurity</option>
+                        <option value="development">Development</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="edit-service-description" class="block text-gray-300 mb-2">Description</label>
+                    <textarea id="edit-service-description" rows="3" class="w-full form-input rounded-lg py-2 px-4" required></textarea>
+                </div>
+                
+                <div>
+                    <label for="edit-service-icon" class="block text-gray-300 mb-2">Icon Class (FontAwesome)</label>
+                    <input type="text" id="edit-service-icon" class="w-full form-input rounded-lg py-2 px-4" placeholder="fas fa-shield-alt" required>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="edit-service-active" class="form-input rounded">
+                    <label for="edit-service-active" class="ml-2 text-gray-300">Active Service</label>
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Update Service
+                    </button>
+                    <button type="button" onclick="hideEditServiceModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex-1 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Message View Modal -->
+    <div id="message-view-modal" class="modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">Message Details</h3>
+                    <button onclick="hideMessageViewModal()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="message-details" class="space-y-4">
+                    <!-- Message details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>
