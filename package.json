@@ -1,5 +1,5 @@
 {
-  "name": "cyber-nytronix",
+  "name": "cyber-hexor",
   "version": "1.0.0",
   "description": "Professional Cybersecurity Company Website with Admin Panel",
   "main": "server.js",
@@ -24,6 +24,7 @@
     "sqlite",
     "nodejs"
   ],
-  "author": "Cyber Nytronix",
+  "author": "Cyber Hexor",
   "license": "MIT"
+
 }
