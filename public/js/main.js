@@ -1,6 +1,6 @@
 // Main website JavaScript functionality
 
-class CyberNytronixApp {
+class CyberHexorApp {
     constructor() {
         this.currentUser = null;
         this.services = [];
@@ -340,7 +340,7 @@ class CyberNytronixApp {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new CyberNytronixApp();
+    window.app = new CyberHexorApp();
 });
 
 // Utility functions
@@ -365,4 +365,5 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+
 }
