@@ -1545,7 +1545,7 @@ class AdminPanel {
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `cyber_nytronix_backup_${Date.now()}.db`;
+                a.download = `cyber_hexor_backup_${Date.now()}.db`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
