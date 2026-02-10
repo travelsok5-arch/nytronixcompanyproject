@@ -204,7 +204,7 @@ function insertDefaultData() {
   const adminPassword = bcrypt.hashSync('admin12345', 10);
   
   // Create admin user
-  const adminEmail = 'admin@cyberHexor.com';
+  const adminEmail = 'admin@cyberhexor.com';
   
   db.get("SELECT * FROM users WHERE email = ?", [adminEmail], (err, user) => {
     if (err) {
@@ -1489,3 +1489,4 @@ process.on('SIGINT', () => {
   process.exit(0);
 
 });
+
