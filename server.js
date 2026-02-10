@@ -74,7 +74,7 @@ const backupUpload = multer({
 });
 
 // ✅ FIXED: Database initialization with let instead of const
-let db = new sqlite3.Database('./cyber_nytronix.db', (err) => {
+let db = new sqlite3.Database('./cyber_Hexor.db', (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
   } else {
@@ -204,7 +204,7 @@ function insertDefaultData() {
   const adminPassword = bcrypt.hashSync('admin12345', 10);
   
   // Create admin user
-  const adminEmail = 'admin@cybernytronix.com';
+  const adminEmail = 'admin@cyberHexor.com';
   
   db.get("SELECT * FROM users WHERE email = ?", [adminEmail], (err, user) => {
     if (err) {
@@ -1155,7 +1155,7 @@ app.get('/api/dashboard-stats', authenticate, (req, res) => {
 
 // Database backup - AUTH REQUIRED
 app.get('/api/backup', authenticate, requireAdmin, (req, res) => {
-  const backupFileName = `cyber_nytronix_backup_${Date.now()}.db`;
+  const backupFileName = `cyber_Hexor_backup_${Date.now()}.db`;
   const backupPath = path.join(__dirname, 'backups', backupFileName);
   
   console.log('💾 Starting database backup...');
@@ -1243,7 +1243,7 @@ app.post('/api/restore', authenticate, requireAdmin, backupUpload.single('backup
     }
 
     const uploadedBackupPath = req.file.path;
-    const currentDbPath = './cyber_nytronix.db';
+    const currentDbPath = './cyber_Hexor.db';
     const safetyBackupPath = path.join(__dirname, 'backups', `safety_backup_${Date.now()}.db`);
 
     console.log('📁 Backup file uploaded:', uploadedBackupPath);
@@ -1471,9 +1471,9 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Cyber Nytronix server running on http://localhost:${PORT}`);
+  console.log(`🚀 Cyber Hexor server running on http://localhost:${PORT}`);
   console.log(`🔐 SECURE Admin panel: http://localhost:${PORT}/s5s5a8hhhjdhhjdjadmin`);
-  console.log(`📊 Database: cyber_nytronix.db`);
+  console.log(`📊 Database: cyber_Hexor.db`);
   console.log(`💾 Backups folder: ./backups/`);
   console.log('\n=== PERSISTENT SESSION MANAGEMENT SYSTEM ===');
   console.log('✅ Session persistence: Browser refresh maintains session');
@@ -1487,4 +1487,5 @@ process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down server...');
   db.close();
   process.exit(0);
+
 });
